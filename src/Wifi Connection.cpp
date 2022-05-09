@@ -3,15 +3,24 @@
 const char* ssid = "C-133";
 const char* password = "changeme2018";
 
+// Set web server port number to 80
+WiFiServer server(80);
+
 void initWiFi() {
   WiFi.mode(WIFI_STA); //setting wifi mode to station so esp can connect to router
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
   WiFi.begin(ssid, password); //.begin uses credentials to connect to the router
-  Serial.print("Connecting to WiFi ..");
-  while (WiFi.status() != WL_CONNECTED) { //checking if esp32 is connected and waiting
-    Serial.print('.');
-    delay(1000);
+  while (WiFi.status() != WL_CONNECTED) { //waiting until esp32 is connected to router
+    delay(500);
+    Serial.print(".");
   }
+
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
   Serial.println(WiFi.localIP()); //printing the local ip address
+  server.begin(); //starting a local server on the ip assigned by router
 }
 
 void setup() {
