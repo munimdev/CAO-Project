@@ -1,3 +1,9 @@
+Mail Delivery Notifier - CAO Project
+====================================
+This project notifies the user through email when a mail is delivered into their mailbox.
+
+It also logs all the deliveies and keeps track of how many mails are currently present inside the mailbox.
+
 How to build PlatformIO based project
 =====================================
 
