@@ -10,7 +10,6 @@
             "includePath": [
                 "c:/Users/munim/Documents/PlatformIO/Projects/220311-143951-arduino-blink/include",
                 "c:/Users/munim/Documents/PlatformIO/Projects/220311-143951-arduino-blink/src",
-                "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/config",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/app_trace",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/app_update",
@@ -98,6 +97,7 @@
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/Ticker/src",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/Update/src",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
+                "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                 "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
@@ -108,7 +108,6 @@
                 "path": [
                     "c:/Users/munim/Documents/PlatformIO/Projects/220311-143951-arduino-blink/include",
                     "c:/Users/munim/Documents/PlatformIO/Projects/220311-143951-arduino-blink/src",
-                    "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/config",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/app_trace",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/app_update",
@@ -196,6 +195,7 @@
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/Ticker/src",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/Update/src",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
+                    "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                     "C:/Users/munim/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
