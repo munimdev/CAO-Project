@@ -1,9 +1,9 @@
 #include <Arduino.h>
-#define timeSeconds 3
+#define timeSeconds 3 //to turn led on for v
 
 // Set GPIOs for LED and PIR Motion Sensor
-#define led 2
-#define motionSensor 27
+const int led = 26;
+const int motionSensor = 27;
 
 // Timer: Auxiliary variables
 unsigned long now = millis();
@@ -12,11 +12,11 @@ boolean startTimer = false;
 
 // Checks if motion was detected, sets LED HIGH and starts a timer
 void IRAM_ATTR detectsMovement() {
-  Serial.println("MOTION DETECTED!!!");
+  Serial.println("Motion detected. Turning LED on");
   digitalWrite(led, HIGH);
   startTimer = true;
   lastTrigger = millis();
-};
+}
 
 void setup() {
   // Serial port for debugging purposes
@@ -30,8 +30,6 @@ void setup() {
   // Set LED to LOW
   pinMode(led, OUTPUT);
   digitalWrite(led, LOW);
-  pinMode(25, OUTPUT);
-  pinMode(25, HIGH);
 }
 
 void loop() {
@@ -39,7 +37,7 @@ void loop() {
   now = millis();
   // Turn off the LED after the number of seconds defined in the timeSeconds variable
   if(startTimer && (now - lastTrigger > (timeSeconds*1000))) {
-    Serial.println("Motion stopped...");
+    Serial.println("Motion stopped. Turning LED off");
     digitalWrite(led, LOW);
     startTimer = false;
   }
