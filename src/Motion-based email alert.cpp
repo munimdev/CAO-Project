@@ -3,14 +3,17 @@
 #include <ESP_Mail_Client.h>
 
 #define MOTION_SENSOR 27
+#define LED 26
 
 #define WIFI_SSID "C-133"
 #define WIFI_PASSWORD "changeme2018"
 
-WiFiServer server(80);
+WiFiServer server(80); // start wifi server on port 80
 
 // Variable to store the HTTP request
 String header;
+
+boolean mailboxAlert = false; //global bool variable that tells whether an email should be sent or not
 
 // Current time
 unsigned long currentTime = millis();
@@ -34,34 +37,6 @@ SMTPSession smtp;
 
 /* Callback function to get the Email sending status */
 void smtpCallback(SMTP_Status status);
-
-// Checks if motion was detected, sets LED HIGH and starts a timer
-void IRAM_ATTR detectsMovement() {
-  Serial.println("Motion detected. Turning LED on");
-}
-
-void setup(){
-  Serial.begin(115200);
-  Serial.println();
-  Serial.print("Connecting to AP");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED){
-    Serial.print(".");
-    delay(200);
-  }
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
-
-  // PIR Motion Sensor mode INPUT_PULLUP
-  pinMode(MOTION_SENSOR, INPUT_PULLUP);
-  // Set motionSensor pin as interrupt, assign interrupt function and set RISING mode
-  attachInterrupt(digitalPinToInterrupt(MOTION_SENSOR), detectsMovement, RISING);
-
-  server.begin();
-}
 
 void sendEmail() {
   /** Enable the debug via Serial port
@@ -121,6 +96,39 @@ void sendEmail() {
     Serial.println("Error sending Email, " + smtp.errorReason());
 }
 
+// Checks if motion was detected, sets LED HIGH and starts a timer
+void IRAM_ATTR detectsMovement() {
+  Serial.println("Motion detected. Turning LED on");
+  digitalWrite(LED, HIGH);
+  mailboxAlert = true; //momentarily set the alert variable to true, when motion sensor changes from LOW to HIGH
+}
+
+void setup(){
+  Serial.begin(115200);
+  Serial.println();
+  Serial.print("Connecting to AP");
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED){
+    Serial.print(".");
+    delay(200);
+  }
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  Serial.println();
+
+  // PIR Motion Sensor mode INPUT_PULLUP
+  pinMode(MOTION_SENSOR, INPUT_PULLUP);
+  pinMode(LED, OUTPUT);
+  // Set LED to LOW
+  digitalWrite(LED, LOW);
+  // Set motionSensor pin as interrupt, assign interrupt function and set RISING mode
+  attachInterrupt(digitalPinToInterrupt(MOTION_SENSOR), detectsMovement, RISING);
+
+  server.begin();
+}
+
 void loop(){
   WiFiClient client = server.available();   // Listen for incoming clients
 
@@ -146,11 +154,15 @@ void loop(){
             client.println("Connection: close");
             client.println();
             
-            // turns the GPIOs on and off
-            if (header.indexOf("GET /email") >= 0) {
+            // // turns the GPIOs on and off
+            // if (header.indexOf("GET /email") >= 0) {
+            //   sendEmail();
+            // }
+            
+            if(digitalRead(MOTION_SENSOR) == HIGH ) {
               sendEmail();
             }
-            
+
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -186,6 +198,12 @@ void loop(){
     client.stop();
     Serial.println("Client disconnected.");
     Serial.println("");
+  }
+
+  if(mailboxAlert) {
+    sendEmail();
+    digitalWrite(LED, LOW);
+    mailboxAlert = false;
   }
 }
 
