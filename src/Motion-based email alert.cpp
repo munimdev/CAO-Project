@@ -106,7 +106,7 @@ void IRAM_ATTR detectsMovement() {
 void setup(){
   Serial.begin(115200);
   Serial.println();
-  Serial.print("Connecting to AP");
+  Serial.print(String("Connecting to "+String(WIFI_SSID)));
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED){
     Serial.print(".");
@@ -114,8 +114,7 @@ void setup(){
   }
   Serial.println("");
   Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(String("IP address: "+WiFi.localIP()));
   Serial.println();
 
   // PIR Motion Sensor mode INPUT_PULLUP
@@ -159,9 +158,9 @@ void loop(){
             //   sendEmail();
             // }
             
-            if(digitalRead(MOTION_SENSOR) == HIGH ) {
-              sendEmail();
-            }
+            // if(digitalRead(MOTION_SENSOR) == HIGH ) {
+            //   sendEmail();
+            // }
 
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
