@@ -3,16 +3,16 @@
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
 
-#define WLAN_SSID "dusk"
-#define WLAN_PASS "munimzafar"
+#define WLAN_SSID "C-133"
+#define WLAN_PASS "changeme2018"
 
 int LED_BUILTIN = 2;
 
 //Adafruit.io Setup
-#define AIO_SERVER "io.adafruit.com"
-#define AIO_SERVERPORT  1883              
-#define AIO_USERNAME "munimzafar"
-#define AIO_KEY "aio_FTOb293pNypmSXXdgJJttbPMCPF9"
+#define AIO_SERVER     "io.adafruit.com"
+#define AIO_SERVERPORT 1883              
+#define AIO_USERNAME   "munimzafar"
+#define AIO_KEY        "aio_EyLt46SDOl20SRtwNuo4Ncfs4ceu"
 
 // Create an ESP8266 WiFiClient class to connect to the MQTT server.
 WiFiClient client;
