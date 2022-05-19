@@ -12,7 +12,7 @@ int LED_BUILTIN = 2;
 #define AIO_SERVER     "io.adafruit.com"
 #define AIO_SERVERPORT 1883              
 #define AIO_USERNAME   "munimzafar"
-#define AIO_KEY        "aio_EyLt46SDOl20SRtwNuo4Ncfs4ceu"
+#define AIO_KEY        "aio_PWZs06yHdV4ScCT2rVaZiram2IRU"
 
 // Create an ESP8266 WiFiClient class to connect to the MQTT server.
 WiFiClient client;
