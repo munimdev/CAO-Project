@@ -12,7 +12,7 @@ int LED_BUILTIN = 2;
 #define AIO_SERVER     "io.adafruit.com"
 #define AIO_SERVERPORT 1883              
 #define AIO_USERNAME   "munimzafar"
-#define AIO_KEY        "aio_PWZs06yHdV4ScCT2rVaZiram2IRU"
+#define AIO_KEY        "aio_XxiL83A329msf9EJIxD9mmbO3IQ3"
 
 // Create an ESP8266 WiFiClient class to connect to the MQTT server.
 WiFiClient client;
@@ -61,6 +61,10 @@ void loop() {
   
   Adafruit_MQTT_Subscribe *subscription;
   while ((subscription = mqtt.readSubscription(20000))) {
+    // ping the server to keep the mqtt connection alive
+    if(! mqtt.ping()) {
+      mqtt.disconnect();
+    }
     if (subscription == &Light1) {
       Serial.print(F("Got: "));
       Serial.println((char *)Light1.lastread);
