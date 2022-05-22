@@ -1,19 +1,30 @@
-#include <Arduino.h>
 #include <WiFi.h>
+#include <Arduino.h>
 #include <ESP_Mail_Client.h>
+#include <Keypad.h>
 
 #define MOTION_SENSOR 27
 #define LED 26
 
+//wifi setup
 #define WIFI_SSID "C-133"
 #define WIFI_PASSWORD "changeme2018"
 
+//Adafruit.io Setup
+#define AIO_SERVER     "io.adafruit.com"
+#define AIO_SERVERPORT 1883              
+#define AIO_USERNAME   "munimzafar"
+#define AIO_KEY        "aio_gKoC768Lzp2k8jChtPa5TkwakHxs"
+
+// Create an ESP8266 WiFiClient class to connect to the MQTT server.
+WiFiClient client;
 WiFiServer server(80); // start wifi server on port 80
 
 // Variable to store the HTTP request
 String header;
 
 boolean mailboxAlert = false; //global bool variable that tells whether an email should be sent or not
+boolean doorStatus = false; //tells whether door is currently open or not
 
 // Current time
 unsigned long currentTime = millis();
@@ -21,6 +32,10 @@ unsigned long currentTime = millis();
 unsigned long previousTime = 0; 
 // Define timeout time in milliseconds (example: 2000ms = 2s)
 const long timeoutTime = 2000;
+
+const long doorTimeoutTime = 15000;
+unsigned long doorOpeningTime = 0;
+unsigned long currentClockTime = millis();
 
 #define SMTP_HOST "smtp.gmail.com"
 #define SMTP_PORT 465
@@ -37,6 +52,33 @@ SMTPSession smtp;
 
 /* Callback function to get the Email sending status */
 void smtpCallback(SMTP_Status status);
+
+#define ROW_NUM     4 // four rows
+#define COLUMN_NUM  4 // three columns
+
+#define pin1 17
+#define pin2 16
+#define pin3 4
+#define pin4 2
+#define pin5 5
+#define pin6 18
+#define pin7 19
+#define pin8 21
+
+char keys[ROW_NUM][COLUMN_NUM] = {
+  {'1', '2', '3','='},
+  {'4', '5', '6','>'},
+  {'7', '8', '9','<'},
+  {'*', '0', '#','+'},
+};
+
+byte pin_rows[ROW_NUM] = {pin5,pin6,pin7,pin8}; 
+byte pin_column[COLUMN_NUM] = {pin1,pin2,pin3,pin4}; 
+
+Keypad keypad = Keypad( makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM );
+
+const String password = "7890"; // password for mailbox
+String input_password;
 
 void sendEmail() {
   /** Enable the debug via Serial port
@@ -74,19 +116,6 @@ void sendEmail() {
   message.text.charSet = "us-ascii";
   message.html.transfer_encoding = Content_Transfer_Encoding::enc_7bit;
 
-  /*
-  //Send raw text message
-  String textMsg = "Hello World! - Sent from ESP board";
-  message.text.content = textMsg.c_str();
-  message.text.charSet = "us-ascii";
-  message.text.transfer_encoding = Content_Transfer_Encoding::enc_7bit;
-  
-  message.priority = esp_mail_smtp_priority::esp_mail_smtp_priority_low;
-  message.response.notify = esp_mail_smtp_notify_success | esp_mail_smtp_notify_failure | esp_mail_smtp_notify_delay;*/
-
-  /* Set the custom message header */
-  //message.addHeader("Message-ID: <abcde.fghij@gmail.com>");
-
   /* Connect to server with the session config */
   if (!smtp.connect(&session))
     return;
@@ -99,15 +128,16 @@ void sendEmail() {
 // Checks if motion was detected, sets LED HIGH and starts a timer
 void IRAM_ATTR detectsMovement() {
   Serial.println("Motion detected. Turning LED on");
-  digitalWrite(LED, HIGH);
+  // digitalWrite(LED, HIGH);
   mailboxAlert = true; //momentarily set the alert variable to true, when motion sensor changes from LOW to HIGH
 }
 
 void MQTT_connect();
 
-void setup(){
+void setup() {
   Serial.begin(115200);
-  Serial.println();
+  input_password.reserve(32); // max 32 characters for input
+
   Serial.print(String("Connecting to "+String(WIFI_SSID)));
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED){
@@ -121,16 +151,19 @@ void setup(){
 
   // PIR Motion Sensor mode INPUT_PULLUP
   pinMode(MOTION_SENSOR, INPUT_PULLUP);
+  
   pinMode(LED, OUTPUT);
   // Set LED to LOW
   digitalWrite(LED, LOW);
+  
   // Set motionSensor pin as interrupt, assign interrupt function and set RISING mode
   attachInterrupt(digitalPinToInterrupt(MOTION_SENSOR), detectsMovement, RISING);
 
   server.begin();
 }
 
-void loop(){
+void loop() {
+  char key = keypad.getKey();
   WiFiClient client = server.available();   // Listen for incoming clients
 
   if (client) {                             // If a new client connects,
@@ -155,29 +188,17 @@ void loop(){
             client.println("Connection: close");
             client.println();
             
-            // // turns the GPIOs on and off
-            // if (header.indexOf("GET /email") >= 0) {
-            //   sendEmail();
-            // }
-            
-            // if(digitalRead(MOTION_SENSOR) == HIGH ) {
-            //   sendEmail();
-            // }
-
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
             client.println("<link rel=\"icon\" href=\"data:,\">");
-            // CSS to style the on/off buttons 
-            // Feel free to change the background-color and font-size attributes to fit your preferences
             client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
             client.println(".button { background-color: #4CAF50; border: none; color: white; padding: 16px 40px;");
             client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
             client.println(".button2 {background-color: #555555;}</style></head>");
             
             // Web Page Heading
-            client.println("<body><h1>ESP32 Web Server</h1>");
-            // If the output26State is off, it displays the ON button       
+            client.println("<body><h1>Mailbox Alert Ssystem</h1>");    
             client.println("<p><a href=\"/email\"><button class=\"button\">Send Email</button></a></p>");
             client.println("</body></html>");
             
@@ -201,10 +222,37 @@ void loop(){
     Serial.println("");
   }
 
-  if(mailboxAlert) {
-    sendEmail();
-    digitalWrite(LED, LOW);
-    mailboxAlert = false;
+  if(password != input_password) {
+    if (key) {
+      Serial.println(key);
+
+      if (key == '*') {
+        input_password = ""; // clear input password
+      } else if (key == '#') {
+        
+      } else {
+          Serial.println("The password is incorrect, ACCESS DENIED!");
+      }
+
+      input_password = ""; // clear input password
+    } else {
+        input_password += key; // append new character to input password string
+      }
+  }
+  else if(password == input_password && key == '#') {
+    Serial.println("The password is correct, ACCESS GRANTED!");
+    doorOpeningTime = millis();
+    
+    if(mailboxAlert) {
+      digitalWrite(LED, HIGH);
+      doorOpeningTime = millis();
+      doorStatus = true;
+      sendEmail();
+      mailboxAlert = false;
+    }
+
+    unsigned long doorOpeningTime = 0;
+    currentClockTime = millis();
   }
 }
 
