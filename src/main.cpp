@@ -125,6 +125,7 @@ void loop() {
   currentClockTime = millis();
   if(doorStatus && (currentClockTime - doorOpeningTime > doorTimeoutTime)) {
     doorStatus = false;
+    mailBoxSent = false;
     digitalWrite(LED, LOW);
     Serial.println("Door is now closed");
     input_password = ""; //reset input password
