@@ -38,16 +38,17 @@ char keys[ROW_NUM][COLUMN_NUM] = { //define keypad layout
   {'7', '8', '9','C'},
   {'*', '0', '#','D'},
 };
-byte pin_rows[ROW_NUM] = {PIN5,PIN6,PIN7,PIN8}; 
+byte pin_rows[ROW_NUM] = {PIN5,PIN6,PIN7,PIN8}; //define input pins for keypad
 byte pin_column[COLUMN_NUM] = {PIN1,PIN2,PIN3,PIN4}; 
 Keypad keypad = Keypad( makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM );
 char key; //stores the inputted key value
-String password = String(random(1000, 9999)); // password for mailbox
-String input_password;
+String password = String(random(1000, 9999)); // randomly generate password for package trunk
+String input_password; //stores the user input password
 
+//credentials for logging into web server
 const char* webServerUsername = "munimzafar";
 const char* webServerPassword = "caoproject";
-const char* inputParameter = "doorState";
+const char* inputParameter = "doorState"; //required for HTTP GET Request
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 // Variable to store the HTTP request
@@ -65,12 +66,14 @@ Adafruit_MQTT_Publish MailBoxFeed = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/
 
 boolean mailboxAlert = false; //global bool variable that tells whether an email should be sent or not
 boolean doorStatus = false; //tells whether door is currently open or not
-boolean emailSent = false;
+boolean emailSent = false; //tells if an email has been sent while the trunk was open
 
+//timeout settings for the package trunk
 const long doorTimeoutTime = 15000; //15 seconds
 unsigned long doorOpeningTime = 0;
 unsigned long currentClockTime = millis();
 
+//Web Server index page HTML code
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
@@ -128,18 +131,20 @@ function logoutButton() {
 </html>
 )rawliteral";
 
+//html code for logout screen
 const char logout_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <p>Logged out or <a href="/">return to homepage</a>.</p>
-  <p><strong>Note:</strong> close all web browser tabs to complete the logout process.</p>
+  <p>Successfully logged out</p>
+  <a href="/">Click me to return to homepage</a>
 </body>
 </html>
 )rawliteral";
 
+//cheks if package trunk is open
 String outputState(){
   if(doorStatus){
     return "checked";
@@ -150,6 +155,7 @@ String outputState(){
   return "";
 }
 
+//processes placeholders for the html index page
 String processor(const String& var){
   //Serial.println(var);
   if(var == "BUTTONPLACEHOLDER"){
@@ -179,6 +185,8 @@ void IRAM_ATTR detectPackageDelivery() {
   }
 }
 
+//opens the trunk
+//@param openedByOwner tells if the trunk was opened by the owner
 void openPackageTrunk(bool openedByOwner) {
   doorStatus = true;
   doorOpeningTime = millis();
@@ -190,6 +198,7 @@ void openPackageTrunk(bool openedByOwner) {
   }
 }
 
+//closes the package trunk
 void closePackageTrunk() {
   doorStatus = false;
   emailSent = false;
@@ -200,8 +209,6 @@ void closePackageTrunk() {
   Serial.println("Trunk is now closed");
 }
 
-
-
 void MQTT_connect(); //function declaration. This function connects to the MQTT service to communicate with the Adafruit API
 
 void setup() {
@@ -210,7 +217,7 @@ void setup() {
 
   Serial.print(String("Connecting to "+String(WIFI_SSID)));
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED){
+  while (WiFi.status() != WL_CONNECTED) { //connect to the wifi
     Serial.print(".");
     delay(200);
   }
@@ -221,7 +228,6 @@ void setup() {
 
   // PIR Motion Sensor mode INPUT_PULLUP
   pinMode(MOTION_SENSOR, INPUT_PULLUP);
-  
   pinMode(DOOR, OUTPUT);
   // Set DOOR to LOW
   digitalWrite(DOOR, LOW);
@@ -241,15 +247,17 @@ void setup() {
     Serial.println("Just received request.");
   });
     
+  //handle logout
   server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(401);
   });
 
+  //display text for a logged out user
   server.on("/logged-out", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", logout_html, processor);
   });
 
-  // Send a GET request to <ESP_IP>/update?doorState=<inputMessage>
+  //When the trunk is opened/closed through the web server
   server.on("/update", HTTP_GET, [] (AsyncWebServerRequest *request) {
     if(!request->authenticate(webServerUsername, webServerPassword))
       return request->requestAuthentication();
@@ -325,11 +333,12 @@ void loop() {
     }
     if (subscription == &Door ) { //monitor door status through Adafruit subscription
       int voiceCommand = atoi((char *)Door.lastread);
-
-      if(voiceCommand == true && doorStatus == false) { //if door is opened
+      Serial.print("Received: ");
+      Serial.print(voiceCommand);
+      if(voiceCommand == true && doorStatus == false) { //if door is closed, open door
         openPackageTrunk(true);
       }
-      else if(voiceCommand == false && doorStatus == true) { //if door is closed
+      else if(voiceCommand == false && doorStatus == true) { //if door is open, close door
         closePackageTrunk();
       }
     }
@@ -356,7 +365,7 @@ void MQTT_connect() { //connects to the MQTT server
     retries--;
     if (retries == 0) {
       // basically die and wait for WDT to reset me
-      while (1);
+      break;
     }
   }
   Serial.println("MQTT Connected!");
