@@ -18,7 +18,7 @@
 #define AIO_SERVER     "io.adafruit.com"
 #define AIO_SERVERPORT 1883              
 #define AIO_USERNAME   "munimzafar"
-#define AIO_KEY        "aio_SLIJ73QBlkU1P74I7GZ1h9vVNLgm"
+#define AIO_KEY        "API KEY HERE"
 
 //keypad setup
 #define ROW_NUM     4 // four rows
@@ -244,7 +244,7 @@ void setup() {
     if(!request->authenticate(webServerUsername, webServerPassword))
       return request->requestAuthentication();
     request->send_P(200, "text/html", index_html, processor);
-    Serial.println("Just received request.");
+    Serial.println("A client just connected to the web server.");
   });
     
   //handle logout
